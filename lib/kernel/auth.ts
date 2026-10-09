@@ -12,8 +12,28 @@ import { one, query } from './db'
 const COOKIE = 'isc_session'
 const MAX_AGE = 60 * 60 * 24 * 30 // 30 days
 
+/**
+ * The session signing key.
+ *
+ * In development we fall back to a fixed string so a fresh clone runs without
+ * any setup. In production that fallback would be a real vulnerability — this
+ * repository is public, so the fallback value is public too, and anyone could
+ * forge an admin session cookie with it. Fail loudly instead of silently
+ * running insecure.
+ */
 function secret(): string {
-  return process.env.AUTH_SECRET || 'isc-development-secret-do-not-use-in-production'
+  const value = process.env.AUTH_SECRET?.trim()
+  if (value) return value
+
+  if (process.env.NODE_ENV === 'production') {
+    throw new Error(
+      'AUTH_SECRET is not set. Refusing to sign sessions with the public ' +
+        'development key. Set AUTH_SECRET to 32+ random characters ' +
+        '(openssl rand -base64 32).',
+    )
+  }
+
+  return 'isc-development-secret-do-not-use-in-production'
 }
 
 /* ---------------------------------- hash --------------------------------- */
