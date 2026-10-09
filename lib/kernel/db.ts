@@ -49,6 +49,25 @@ async function connect(): Promise<Driver> {
     }
   }
 
+  /* Serverless hosts ship a read-only bundle directory, and PGlite needs to
+     write to disk. Falling through there dies with an opaque
+     `ENOENT: mkdir '/var/task/.data/pg'` — which reads like a filesystem bug
+     rather than the missing environment variable it actually is. Say what is
+     wrong instead.
+
+     Only guarded on serverless: a local `next build` also runs with
+     NODE_ENV=production and no DATABASE_URL, and that must keep working. */
+  const serverless =
+    process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME || process.env.NETLIFY
+  if (serverless) {
+    throw new Error(
+      'DATABASE_URL is not set. Refusing to fall back to the embedded ' +
+        'database: serverless filesystems are read-only, so it cannot work. ' +
+        'Add DATABASE_URL in Vercel → Settings → Environment Variables, then ' +
+        'redeploy — changing a variable does not rebuild on its own.',
+    )
+  }
+
   const { PGlite } = await import('@electric-sql/pglite')
   const dir = process.env.PGLITE_DIR || path.join(process.cwd(), '.data', 'pg')
   mkdirSync(dir, { recursive: true })
