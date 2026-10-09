@@ -113,6 +113,11 @@ npm run dev          # http://localhost:4321
 
 ## 三、上线到服务器（Vercel + 托管 Postgres + GoDaddy 域名）
 
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/mehedi-hasan-shoton/international-study-council)
+
+> 点上面这个按钮可以直接跳到 Vercel 的导入页面，省掉「在列表里找仓库」这一步。
+> **导入时必须填好 4 个环境变量**（见第 3 步），否则网站会报错。
+
 ### 第 1 步 · 建数据库
 
 任选一家托管 Postgres，都有免费额度：
